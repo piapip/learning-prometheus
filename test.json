@@ -1,0 +1,95 @@
+{
+    "Name": "second roll",
+    "SpanContext": {
+        "TraceID": "770d9f59adb895a0a37b2551eaa66e9d",
+        "SpanID": "54c3a1350d843b84",
+        "TraceFlags": "01",
+        "TraceState": "",
+        "Remote": false
+    },
+    "Parent": {
+        "TraceID": "770d9f59adb895a0a37b2551eaa66e9d",
+        "SpanID": "ebdf86e046f8e7d5",
+        "TraceFlags": "01",
+        "TraceState": "",
+        "Remote": false
+    },
+    "SpanKind": 1,
+    "StartTime": "2025-02-06T22:41:10.120910075+07:00",
+    "EndTime": "2025-02-06T22:41:10.120912912+07:00",
+    "Attributes": [
+        {
+            "Key": "roll.value",
+            "Value": {
+                "Type": "INT64",
+                "Value": 7
+            }
+        }
+    ],
+    "Events": [
+        {
+            "Name": "second roll",
+            "Attributes": null,
+            "DroppedAttributeCount": 0,
+            "Time": "2025-02-06T22:41:10.120910665+07:00"
+        }
+    ],
+    "Links": null,
+    "Status": {
+        "Code": "Unset",
+        "Description": ""
+    },
+    "DroppedAttributes": 0,
+    "DroppedEvents": 0,
+    "DroppedLinks": 0,
+    "ChildSpanCount": 0,
+    "Resource": [
+        {
+            "Key": "service.name",
+            "Value": {
+                "Type": "STRING",
+                "Value": "exampleService"
+            }
+        },
+        {
+            "Key": "service.version",
+            "Value": {
+                "Type": "STRING",
+                "Value": "0.1.0"
+            }
+        },
+        {
+            "Key": "telemetry.sdk.language",
+            "Value": {
+                "Type": "STRING",
+                "Value": "go"
+            }
+        },
+        {
+            "Key": "telemetry.sdk.name",
+            "Value": {
+                "Type": "STRING",
+                "Value": "opentelemetry"
+            }
+        },
+        {
+            "Key": "telemetry.sdk.version",
+            "Value": {
+                "Type": "STRING",
+                "Value": "1.34.0"
+            }
+        }
+    ],
+    "InstrumentationScope": {
+        "Name": "learn-prometheus",
+        "Version": "",
+        "SchemaURL": "",
+        "Attributes": null
+    },
+    "InstrumentationLibrary": {
+        "Name": "learn-prometheus",
+        "Version": "",
+        "SchemaURL": "",
+        "Attributes": null
+    }
+}

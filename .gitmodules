@@ -1,0 +1,3 @@
+[submodule "jaeger"]
+	path = jaeger
+	url = git@github.com:jaegertracing/jaeger.git

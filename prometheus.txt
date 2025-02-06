@@ -1,0 +1,374 @@
+================================================================================================================================================
+
+Starting Prometheus:
+cd prometheus-...
+./prometheus --config.file=prometheus.yml
+
+Starting 3 other nodes for metric scraping:
+cd node_exporter...
+./node_exporter --web.listen-address 127.0.0.1:8080
+./node_exporter --web.listen-address 127.0.0.1:8081											
+./node_exporter --web.listen-address 127.0.0.1:8082
+
+Prometheus exports its own metrics, and the 3 other nodes are also exporting their metrics.
+[Prometheus]      localhost:9090/metrics
+[Node Exporter 1] localhost:8080/metrics
+[Node Exporter 2] localhost:8081/metrics
+[Node Exporter 3] localhost:8082/metrics
+
+================================================================================================================================================
+
+Jan 10th
+
+Metric name and labels
+
+http_requests_total{method="POST", end_point="/api/create", status=200} 209
+http_requests_total{method="GET", end_point="/api/user/:id", status=200} 512
+http_requests_total{method="GET", end_point="/api/user/:id", status=404} 10
+http_requests_total{method="GET", end_point="/api/users", status=200} 301
+
+In the example above, the metric represents the total HTTP requests hit the server where there are:
+209 successful user POST Create request.
+512 successful user GET request for a specific user ID.
+10 failed user GET request targetting a non-existing user ID.
+301 successful user GET request to list all the users. 
+
+The metric name is: "http_requests_total"
+The metric labels are: (a bunch of key-value pairs)
+- method: HTTP Method [GET, POST, ...]
+- endpoint: the endpoint pattern, if the end point targets the specific user like "/api/user/1ac", then it's better to provide the endpoint pattern to Prometheus.
+- status: HTTP Status code [200, ..., 401, 402, 403, 404, ... ]
+
+The to query/filter the metric, you'll do:
+<metric name>{<label name 1>=<label value 1>, <label name 2>=<label value 2>, ...}
+
+
+Counter, Gauge, and Histogram
+
+Counter: It counts occurrence, also, it MUST NOT BE able to go down.
+  Example: How many requests hit the server:
+  Requests count coming into the server can only go up, so "Counter" is a good fit here.
+  - http_requests_total{method="POST", end_point="/api/create", status=200} 209
+    209 POST requests hit the server.
+
+Gauge: Similar to counter, but it can be reduced.
+  Example: How many active users in the server
+  User comes and goes, so the active user count will not be a constant value.
+  - active_users{region="us-east", app="web"} 209
+    There are 209 active users in the us-east server.
+    
+Histogram: It's like Counter but with a bonus, also, because of that, it also MUST NOT BE able to go down.
+           It observe the process and check how long the process takes to finish, then put it in the correct "bucket".
+           Buckets are a bunch of time slot like: [0.1, 0.5, 1, 5, +Inf]
+           In that example, there are 5 buckets representing:
+           - Processes taking 0.1s.
+           - Processes taking 0.5s.
+           - Processes taking   1s.
+           - Processes taking   5s.
+           - Processes taking forever.
+           Counter is used for checking the popularity of the process. 
+             If the process is requested a lot, maybe the biz would like to spend more time developing it.
+           Histogram is used for checking the performance of the process.
+             If the process is slow af, maybe it's too popular so we can report to the biz so they can allocate more money to buy more hardware, memory, ...,
+             allocating more time/manpower to improve the process performance.
+           
+           In that sense, the histogram always comes with 3 metrics:
+           - bucket to check the performance, it always goes with some kind of label to compare the time slot.
+           - sum will take the sum of all the processing time of all the requests.
+           - count to count the total request, it's similar to the Counter.
+  Example using the above buckets: Show me the performance of the HTTP server ("le" means less or equal)
+  - http_request_duration_seconds_bucket{le="0.1"}    50
+  - http_request_duration_seconds_bucket{le="0.5"}   100
+  - http_request_duration_seconds_bucket{le="1"}     499
+  - http_request_duration_seconds_bucket{le="5"}     499
+  - http_request_duration_seconds_bucket{le="Inf"}   500
+  
+  This means:
+  - There are total 500 requests. http_request_duration_seconds_count = 500
+  -  50 requests that took less than 0.1s to process. (Let's assume all of them took 0.05s)
+     50 requests that took between 0.1s to 0.5s to process. (Assume took 0.4s per request)
+    399 requests that took between 0.5s to   1s to process. (Assume took 1s per request)
+      0 requests that took between 1s to 5s to process.
+      1 requests that took forever to process. (Assume 10s, because something is hanging)
+  - Sum will be: 50 * 0.05 + 50 * 0.4 + 399*1 + 1*10 = 431.5
+    http_request_duration_seconds_sum 431.5
+    
+  No idea the usecase for the (_sum) tbh.
+
+Summary: Similar to Histogram, but instead of bucket, it provides another way to compute quantile.
+         Use Histogram if I have a hunch of the performance of the service, like I expect the requets to be handled in 0.1s, and at worst, 10s.
+         Use Summary if I don't have any clue and want the exact quantile, though, I don't see how this is ever needed...
+
+===============================================
+
+p99
+  p99, in development to scale, p99 is important to keep low. It represents the average duration of 99% of all the processes. People use p99 instead of p100 to ignore that 1% outlier where the extreme may happen. If the system is still really bad at p99, then it needs to be debug to figure out the throttle point.
+
+Let's take an example of Prometheus scraping over 5 minutes (300s) for service that needs to serve a lot of users:
+
+rate(http_request_duration_seconds)
+┌────────┬─────────┬────────────┬─────────────┬──────────────┬──────────────┬──────────────┬────────────┬───────────┬───────────┬──────┐ 
+| bucket |  10 ms  |    50 ms   |    100 ms   |    200 ms    |    300 ms    |    500 ms    |     1 s    |    2 s    |    5 s    | +Inf |
+├────────┼─────────┼────────────┼─────────────┼──────────────┼──────────────┼──────────────┼────────────┼───────────┼───────────┼──────┤
+| range  |  ~10ms  | 10 ~ 50 ms | 50 ~ 100 ms | 100 ~ 200 ms | 200 ~ 300 ms | 300 ~ 500 ms | 500ms ~ 1s |  1s ~ 2s  |  2s ~ 5s  |  5~  |
+├────────┼─────────┼────────────┼─────────────┼──────────────┼──────────────┼──────────────┼────────────┼───────────┼───────────┼──────┤
+| count  | 900_000 |   900_000  |   450_000   |    300_000   |    240_000   |    120_000   |   60_000   |   12_000  |   1_500   |  300 |
+├────────┼─────────┼────────────┼─────────────┼──────────────┼──────────────┼──────────────┼────────────┼───────────┼───────────┼──────┤
+|  rate  |  3_000  |    3_000   |    1_500    |     1_000    |      800     |      400     |    200     |     40    |     5     |   1  |
+└────────┴─────────┴────────────┴─────────────┴──────────────┴──────────────┴──────────────┴────────────┴───────────┴───────────┴──────┘
+  rate = (delta / interval) = (count / 300)
+ 
+In this example, over 5 minutes, there are:
+- 900_000 incoming requests executed in less than  10ms.
+- 900_000 incoming requests took between  10ms to  50ms.
+- 450_000 incoming requests took between  50ms to 100ms.
+- 300_000 incoming requests took between 100ms to 200ms.
+- 240_000 incoming requests took between 200ms to 300ms.
+- 120_000 incoming requests took between 300ms to 500ms.
+-  60_000 incoming requests took between 500ms to   1s.
+-  12_000 incoming requests took between   1s  to   2s.
+-   1_500 incoming requests took between   2s  to   5s.
+-     300 incoming requests took more than 5s.
+  
+  p99 will be calculate by using a thing in histogram called histogram_quantile.
+  p99 is not the exact calculate of the average execution time among the 99% of the 2983800 requests, it produces the relative number to the performance of the process, the lower the number, the better the performance is. Treat it like an educated guess.
+  
+  Using the quantile algorithm: https://github.com/prometheus/prometheus/blob/caa173d2aac4c390546b1f78302104b1ccae0878/promql/quantile.go#L49-L73
+  
+calculate p99 with count.
+  q = 0.99
+  buckets = []bucket{
+    {upperBound: 0.01,        count:   900_000}, // 0
+    {upperBound: 0.05,        count: 1_800_000}, // 1
+    {upperBound: 0.1,         count: 2_250_000}, // 2
+    {upperBound: 0.2,         count: 2_550_000}, // 3
+    {upperBound: 0.3,         count: 2_790_000}, // 4
+    {upperBound: 0.5,         count: 2_910_000}, // 5
+    {upperBound: 1,           count: 2_970_000}, // 6
+    {upperBound: 2,           count: 2_982_000}, // 7
+    {upperBound: 5,           count: 2_983_500}, // 8
+    {upperBound: math.Inf(1), count: 2_983_800}, // 9
+  }
+  observations := bucket[len(bucket)-1].count = 2_983_800
+  rank := q * observations = 0.99*2_983_800 = 2_953_962
+  b := 6
+  
+  bucketEnd = 1
+  bucketStart = 0.5
+  count = buckets[b].count - buckets[b-1].count = 2_970_000 - 2_910_000 = 60_000
+  rank = rank - buckets[b-1].count = 2_953_962 - 2_910_000 = 43962
+  
+  quantile = bucketStart + (bucketEnd-bucketStart)*(rank/count) = 0.5 + 0.5*43_962/60_000 = ~0.87 (0.86635)
+
+calculate p99 with rate.
+    q = 0.99
+  buckets = []bucket{
+    {upperBound: 0.01,        count:   3000}, // 0
+    {upperBound: 0.05,        count:   6000}, // 1
+    {upperBound: 0.1,         count:   7500}, // 2
+    {upperBound: 0.2,         count:   8500}, // 3
+    {upperBound: 0.3,         count:   9300}, // 4
+    {upperBound: 0.5,         count:   9700}, // 5
+    {upperBound: 1,           count:   9900}, // 6
+    {upperBound: 2,           count:   9940}, // 7
+    {upperBound: 5,           count:   9945}, // 8
+    {upperBound: math.Inf(1), count:   9946}, // 9
+  }
+  observations := bucket[len(bucket)-1].count = 9946
+  rank := q * observations = 0.99*9946 = 9846.54
+  b := 6
+  
+  bucketEnd = 1
+  bucketStart = 0.5
+  count = buckets[b].count - buckets[b-1].count = 9900 - 9700 = 200
+  rank = rank - buckets[b-1].count = 9846.54 - 9700 = 73_800 = 146.54
+  
+  quantile = bucketStart + (bucketEnd-bucketStart)*(rank/count) = 0.5 + 0.5*146.54/200 = ~0.87 (0.86635)
+
+Seems like, for calculating quantile, using rate or count, doesn't matter.
+
+Note that in the given table, the count/rate is provided separatedly based on the timeslot, but the bucket requires all the items up until the timeslot, it doesn't care about the items whose process take between 50ms-100ms, it cares about all the items whose process take upto 100ms. So the count of the upperBound of 1s will be all the count of (10ms) + (50ms) + (100ms) + ... + (1s).
+
+So, if I want to calculate the p99, the formula would be:
+  histogram_quantile(0.99, sum(rate(http_request_duration_second[10m])))
+  
+  check if this works or not:
+  histogram_quantile(0.99, (http_request_duration_second[10m]))
+================================================================================================================================================
+
+Some query:
+
+Look up by pattern
+  http_requests_total{job=".*server"}
+    to show the requests count for jobs that end with "server".
+  http_requests_total{status!~"4.."}
+    to show the requests count whose status is not 4xx.
+
+Subquery:
+  rate(http_requests_total[5m])[30m:1m]
+    to return the 5-minute rate of the http_requests_total in the past 30 minutes, with the resolution of 1 minute.
+    (like a sliding window with the length of 5, inching to the right with the step of 1, 30 times)
+  
+  sum by (group, job) (
+    rate(node_context_switches_total[5m])
+  )
+    to return the 5-minute rate of the node_context_switches_total for pairs of (group, job). Example:
+    Without the nested subquery:
+    -----------------------------------------------
+    rate(node_context_switches_total[5m])
+    -----------------------------------------------
+    {group="production", instance="localhost:8081", job="node"}	4093.9728813559323
+    {group="production", instance="localhost:8080", job="node"}	4077.372881355932
+    {group="canary", instance="localhost:8082", job="node"}		4112.8
+    -----------------------------------------------
+    With the nested subquery:
+    -----------------------------------------------
+    sum by (group, job) (
+      rate(node_context_switches_total[5m])
+    )
+    -----------------------------------------------
+    {group="production", job="node"}	8171.3457627118643
+    {group="canary", job="node"}	4112.8
+    -----------------------------------------------
+
+Operator
+- If the query has the same dimension of label, we can apply +-/* operator to those query.
+  For example:
+    ----------------------(1)----------------------
+    process_network_transmit_bytes_total
+    -----------------------------------------------
+    process_network_transmit_bytes_total{instance="localhost:9090", job="prometheus"}	108111894
+    process_network_transmit_bytes_total{instance="localhost:8090", job="simple-server"}	108087825
+    -----------------------------------------------
+    
+    ----------------------(2)----------------------
+    process_network_receive_bytes_total
+    -----------------------------------------------
+    process_network_receive_bytes_total{instance="localhost:9090", job="prometheus"}	169072871
+    process_network_receive_bytes_total{instance="localhost:8090", job="simple-server"}	169051021
+    -----------------------------------------------
+  
+  Both (1) and (2) has the label dimension of (instance, job) = (("localhost:9090", "prometheus"), ("localhost:8090", "simple-server"))
+  So if I apply the division operator (/), I can get some data:
+    -----------------------------------------------
+    process_network_transmit_bytes_total/process_network_receive_bytes_total
+    -----------------------------------------------
+    process_network_transmit_bytes_total{instance="localhost:9090", job="prometheus"}	0.6515867613715687
+    process_network_transmit_bytes_total{instance="localhost:8090", job="simple-server"}	0.6515389436225265
+    -----------------------------------------------
+
+- What if one query has the same dimension but with more data:
+    ----------------------(3)----------------------
+    process_cpu_seconds_total
+    -----------------------------------------------
+    process_cpu_seconds_total{instance="localhost:9090", job="prometheus"}			6.5
+    process_cpu_seconds_total{instance="localhost:8090", job="simple-server"}		8.84
+    process_cpu_seconds_total{group="production", instance="localhost:8081", job="node"}	11.23
+    process_cpu_seconds_total{group="production", instance="localhost:8080", job="node"}	10.38
+    process_cpu_seconds_total{group="canary", instance="localhost:8082", job="node"}	11.62
+    -----------------------------------------------
+
+  If I apply division (2)/(3), then it will only apply division for the set of data with the matching labels (the first 2 rows)
+    -----------------------------------------------
+    process_network_receive_bytes_total/process_cpu_seconds_total
+    -----------------------------------------------
+    {instance="localhost:9090", job="prometheus"}	23316108.168642953
+    {instance="localhost:8090", job="simple-server"}	19388772.836801752
+    -----------------------------------------------
+  
+  If the dimension are completely different like (instance, job, grup, mode, cpu) vs (instance, job), then if I apply any operator, it will give me "empty query result".
+  
+- If the data has somewhat similar dimension for example (3) and (4):
+    ----------------------(4)----------------------
+    node_cpu_seconds_total
+    -----------------------------------------------
+    node_cpu_seconds_total{cpu="0", group="production", instance="localhost:8081", job="node", mode="idle"}	13585.61
+    node_cpu_seconds_total{cpu="0", group="production", instance="localhost:8081", job="node", mode="iowait"}	36.5
+    node_cpu_seconds_total{cpu="0", group="production", instance="localhost:8081", job="node", mode="irq"}		0
+    node_cpu_seconds_total{cpu="0", group="production", instance="localhost:8081", job="node", mode="nice"}	79.8
+    ...(20 items more)...
+    -----------------------------------------------
+  
+  (3) and (4) has the same label of (instance, job) = (("localhost:8080", "node"), ("localhost:8081", "node"), ("localhost:8082", "node")) (group can be here too but I'm lazy to list it out)
+  but (4) has the cpu, and mode that (3) doesn't care about.
+  So if I want to do any interaction between (3) and (4), I can do some aggregation before applying the operator.
+    ---------------------(3.5)---------------------
+    sum by (instance, job) (
+      node_cpu_seconds_total
+    )
+    -----------------------------------------------
+    {instance="localhost:8081", job="node"}	125747.69
+    {instance="localhost:8080", job="node"}	125758.45
+    {instance="localhost:8082", job="node"}	125729.33
+    -----------------------------------------------
+    
+    ---------------------(4.5)---------------------
+    sum by (instance, job) (
+      process_cpu_seconds_total
+    )
+    -----------------------------------------------
+    {instance="localhost:9090", job="prometheus"}	22.61
+    {instance="localhost:8090", job="simple-server"}	12.3
+    {instance="localhost:8081", job="node"}		41.37
+    {instance="localhost:8080", job="node"}		39.31
+    {instance="localhost:8082", job="node"}		41.8
+    -----------------------------------------------
+
+  Then apply division on (3.5)/(4.5)
+    ---------------------(3.5)---------------------
+    (sum by (instance, job) (
+      node_cpu_seconds_total
+    ))/(sum by (instance, job) (
+      process_cpu_seconds_total
+    ))
+    -----------------------------------------------
+    {instance="localhost:8081", job="node"}	3014.5062990254337
+    {instance="localhost:8080", job="node"}	3162.077038145101
+    {instance="localhost:8082", job="node"}	2984.9738700564976
+    -----------------------------------------------
+
+================================================================================================================================================
+
+Some more queries:
+  Instant vector vs range vector explanation: https://satyanash.net/software/2021/01/04/understanding-prometheus-range-vectors.html
+  Basically:
+    node_cpu_seconds_total is an instant vector showing the node_cpu_seconds_total at this time.
+    node_cpu_seconds_total{instance="localhost:8080"} is a subset of the instant vector. (=, !=, =~, !~)
+    node_cpu_seconds_total[4m] is a range vector showing the node_cpu_seconds_total in the last 4 minutes.
+
+
+ It seems like reading any more about queries won't bring me to anywhere. It can only be learned by actually using it when the use case asks for it.
+================================================================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
