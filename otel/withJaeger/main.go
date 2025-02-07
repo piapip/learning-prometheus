@@ -57,6 +57,8 @@ func main() {
 	}
 
 	// Ensure default SDK resources and the required service name are set.
+	// This resource will override the OTEL_RESOURCE_ATTRIBUTES I have in the run.sh btw.
+	// Say, if I don't pass the resource to the logger, the service_name will be "dice", instead of "exampleService".
 	r, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
@@ -333,9 +335,14 @@ func newConsoleExporter() (sdkTrace.SpanExporter, error) {
 // newJaegerExporter initializes and returns a Jaeger exporter.
 func newJaegerExporter(ctx context.Context) (sdkTrace.SpanExporter, error) {
 	// Jaeger:
-	//   4317 for gRPC
-	//   4318 for HTTP API
-	jaegerEndpoint := "localhost:4318"
+	//   (Local) 4320 >> (Jaeger) 4317 for gRPC
+	//   (Local) 4319 >> (Jaeger) 4318 for HTTP API
+	// Because the logs are already exported to Loki via http://localhost:4318/v1/logs
+	// And I know how to change this port,
+	// and I don't know how to change the Loki's port, so this one takes the ball.
+	// traces are now being exported to (Local) http://localhost:4319/v1/traces instead,
+	// and will be port-forwarded to (Jaeger) http://localhost:4318/v1/traces.
+	jaegerEndpoint := "localhost:4319"
 
 	return otlptracehttp.New(ctx,
 		// Change from HTTPS -> HTTP.
@@ -375,7 +382,7 @@ func newMeterProvider(res *resource.Resource) (*sdkMetric.MeterProvider, error) 
 	}
 
 	meterProvider := sdkMetric.NewMeterProvider(
-		// sdkMetric.WithResource(res),
+		sdkMetric.WithResource(res),
 		sdkMetric.WithReader(
 			// sdkMetric.NewPeriodicReader(
 			// 	metricExporter,
@@ -404,6 +411,9 @@ func newLoggerProvider(ctx context.Context, res *resource.Resource) (*sdkLog.Log
 	}
 
 	logProvider := sdkLog.NewLoggerProvider(
+		// If I comment out this WithResource,
+		// the exported logs in Loki will belong to the service named "dice", defined in run.sh's hacky OTEL_RESOURCE_ATTRIBUTES export,
+		// instead of the one defined on the top named "exampleService".
 		sdkLog.WithResource(res),
 		sdkLog.WithProcessor(sdkLog.NewBatchProcessor(logExporter)),
 	)
