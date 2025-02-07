@@ -3,14 +3,15 @@ Don't even bother trying to install Loki the proper way, just docker it up.
 Run this thing blindly following this documentation to export the logs to Loki in Grafana.
 https://grafana.com/docs/loki/latest/send-data/otel/otel-collector-getting-started/
 1. Do pretty much w/e it says.
-2. The docker-compose file contains more than I ask for, I already have grafana locally, so I removed the grafana part from the docker-compose, and install the Loki in my Grafana myself. Loki is already Grafana's built-in stuff so no extra download required.
-3. The prick in otel-collector also takes up the Jaeger port so what's up? Can I have one at a time only? Either Jaeger at 4318 or OTEL Collector for Loki in 4318?
-Currently,
+2. About instrumentating Loki into OTEL, based on the video linked in the Getting Started page, there's not much needed to be done, making the default LoggerProvider and expose it globally is enough, the otel-collector and its otel-config will handle the rest of the heavy lifting. The video doesn't say that explicitly, but I kinda guess so.
+3. The original docker-compose file in the video contains more than I ask for, I already have grafana locally, so I removed the grafana part from the docker-compose, and install the Loki in my Grafana myself. Loki is already Grafana's built-in stuff so no extra download required.
+4. The prick in otel-collector also takes up the Jaeger port, can I have one at a time only? Either Jaeger at 4318 or OTEL Collector for Loki in 4318?
 - The logs are exported to Loki via http://localhost:4318/v1/logs
 - The traces are exported to Jaeger via http://localhost:4318/v1/traces
+
 So what's up?
 
-Turns out I can export the traces via another port, I selected 4319 for this one, and update the Jaeger port-forwarding to support that shenanigan.
+It turns out that I can export the traces via another port, I selected 4319 for this one, and update the Jaeger port-forwarding to support that shenanigan.
 
 Command I ran were:
 ```bash
