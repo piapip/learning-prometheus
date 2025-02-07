@@ -1,48 +1,4 @@
 {
-    "Name": "second roll",
-    "SpanContext": {
-        "TraceID": "770d9f59adb895a0a37b2551eaa66e9d",
-        "SpanID": "54c3a1350d843b84",
-        "TraceFlags": "01",
-        "TraceState": "",
-        "Remote": false
-    },
-    "Parent": {
-        "TraceID": "770d9f59adb895a0a37b2551eaa66e9d",
-        "SpanID": "ebdf86e046f8e7d5",
-        "TraceFlags": "01",
-        "TraceState": "",
-        "Remote": false
-    },
-    "SpanKind": 1,
-    "StartTime": "2025-02-06T22:41:10.120910075+07:00",
-    "EndTime": "2025-02-06T22:41:10.120912912+07:00",
-    "Attributes": [
-        {
-            "Key": "roll.value",
-            "Value": {
-                "Type": "INT64",
-                "Value": 7
-            }
-        }
-    ],
-    "Events": [
-        {
-            "Name": "second roll",
-            "Attributes": null,
-            "DroppedAttributeCount": 0,
-            "Time": "2025-02-06T22:41:10.120910665+07:00"
-        }
-    ],
-    "Links": null,
-    "Status": {
-        "Code": "Unset",
-        "Description": ""
-    },
-    "DroppedAttributes": 0,
-    "DroppedEvents": 0,
-    "DroppedLinks": 0,
-    "ChildSpanCount": 0,
     "Resource": [
         {
             "Key": "service.name",
@@ -80,16 +36,403 @@
             }
         }
     ],
-    "InstrumentationScope": {
-        "Name": "learn-prometheus",
-        "Version": "",
-        "SchemaURL": "",
-        "Attributes": null
-    },
-    "InstrumentationLibrary": {
-        "Name": "learn-prometheus",
-        "Version": "",
-        "SchemaURL": "",
-        "Attributes": null
-    }
+    "ScopeMetrics": [
+        {
+            "Scope": {
+                "Name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+                "Version": "0.59.0",
+                "SchemaURL": "",
+                "Attributes": null
+            },
+            "Metrics": [
+                {
+                    "Name": "http.server.request.size",
+                    "Description": "Measures the size of HTTP request messages.",
+                    "Unit": "By",
+                    "Data": {
+                        "DataPoints": [
+                            {
+                                "Attributes": [
+                                    {
+                                        "Key": "http.method",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "GET"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.route",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "/rolldice/{playerID}"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.scheme",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "http"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.status_code",
+                                        "Value": {
+                                            "Type": "INT64",
+                                            "Value": 200
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.host.name",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "localhost"
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.host.port",
+                                        "Value": {
+                                            "Type": "INT64",
+                                            "Value": 8090
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.protocol.name",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "http"
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.protocol.version",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "1.1"
+                                        }
+                                    }
+                                ],
+                                "StartTime": "2025-02-07T15:48:20.658211492+07:00",
+                                "Time": "2025-02-07T15:48:59.658572267+07:00",
+                                "Value": 0,
+                                "Exemplars": [
+                                    {
+                                        "FilteredAttributes": null,
+                                        "Time": "2025-02-07T15:48:46.29840432+07:00",
+                                        "Value": 0,
+                                        "SpanID": "0U1mvJe4E8k=",
+                                        "TraceID": "rsfcM5JrWjFvb3KGvTBruQ=="
+                                    }
+                                ]
+                            }
+                        ],
+                        "Temporality": "CumulativeTemporality",
+                        "IsMonotonic": true
+                    }
+                },
+                {
+                    "Name": "http.server.response.size",
+                    "Description": "Measures the size of HTTP response messages.",
+                    "Unit": "By",
+                    "Data": {
+                        "DataPoints": [
+                            {
+                                "Attributes": [
+                                    {
+                                        "Key": "http.method",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "GET"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.route",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "/rolldice/{playerID}"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.scheme",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "http"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.status_code",
+                                        "Value": {
+                                            "Type": "INT64",
+                                            "Value": 200
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.host.name",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "localhost"
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.host.port",
+                                        "Value": {
+                                            "Type": "INT64",
+                                            "Value": 8090
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.protocol.name",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "http"
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.protocol.version",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "1.1"
+                                        }
+                                    }
+                                ],
+                                "StartTime": "2025-02-07T15:48:20.658213151+07:00",
+                                "Time": "2025-02-07T15:48:59.658580708+07:00",
+                                "Value": 21,
+                                "Exemplars": [
+                                    {
+                                        "FilteredAttributes": null,
+                                        "Time": "2025-02-07T15:48:46.298458354+07:00",
+                                        "Value": 21,
+                                        "SpanID": "0U1mvJe4E8k=",
+                                        "TraceID": "rsfcM5JrWjFvb3KGvTBruQ=="
+                                    }
+                                ]
+                            }
+                        ],
+                        "Temporality": "CumulativeTemporality",
+                        "IsMonotonic": true
+                    }
+                },
+                {
+                    "Name": "http.server.duration",
+                    "Description": "Measures the duration of inbound HTTP requests.",
+                    "Unit": "ms",
+                    "Data": {
+                        "DataPoints": [
+                            {
+                                "Attributes": [
+                                    {
+                                        "Key": "http.method",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "GET"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.route",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "/rolldice/{playerID}"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.scheme",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "http"
+                                        }
+                                    },
+                                    {
+                                        "Key": "http.status_code",
+                                        "Value": {
+                                            "Type": "INT64",
+                                            "Value": 200
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.host.name",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "localhost"
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.host.port",
+                                        "Value": {
+                                            "Type": "INT64",
+                                            "Value": 8090
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.protocol.name",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "http"
+                                        }
+                                    },
+                                    {
+                                        "Key": "net.protocol.version",
+                                        "Value": {
+                                            "Type": "STRING",
+                                            "Value": "1.1"
+                                        }
+                                    }
+                                ],
+                                "StartTime": "2025-02-07T15:48:20.65821556+07:00",
+                                "Time": "2025-02-07T15:48:59.65858334+07:00",
+                                "Count": 1,
+                                "Bounds": [
+                                    0,
+                                    5,
+                                    10,
+                                    25,
+                                    50,
+                                    75,
+                                    100,
+                                    250,
+                                    500,
+                                    750,
+                                    1000,
+                                    2500,
+                                    5000,
+                                    7500,
+                                    10000
+                                ],
+                                "BucketCounts": [
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                    0
+                                ],
+                                "Min": 6002.392189,
+                                "Max": 6002.392189,
+                                "Sum": 6002.392189,
+                                "Exemplars": [
+                                    {
+                                        "FilteredAttributes": null,
+                                        "Time": "2025-02-07T15:48:46.298502401+07:00",
+                                        "Value": 6002.392189,
+                                        "SpanID": "0U1mvJe4E8k=",
+                                        "TraceID": "rsfcM5JrWjFvb3KGvTBruQ=="
+                                    }
+                                ]
+                            }
+                        ],
+                        "Temporality": "CumulativeTemporality"
+                    }
+                }
+            ]
+        },
+        {
+            "Scope": {
+                "Name": "learn-prometheus",
+                "Version": "",
+                "SchemaURL": "",
+                "Attributes": null
+            },
+            "Metrics": [
+                {
+                    "Name": "dice.rolls",
+                    "Description": "The number of rolls by roll value",
+                    "Unit": "{roll}",
+                    "Data": {
+                        "DataPoints": [
+                            {
+                                "Attributes": [
+                                    {
+                                        "Key": "roll.value",
+                                        "Value": {
+                                            "Type": "INT64",
+                                            "Value": 1
+                                        }
+                                    }
+                                ],
+                                "StartTime": "2025-02-07T15:48:20.658179675+07:00",
+                                "Time": "2025-02-07T15:48:59.658587435+07:00",
+                                "Value": 1,
+                                "Exemplars": [
+                                    {
+                                        "FilteredAttributes": null,
+                                        "Time": "2025-02-07T15:48:40.296003356+07:00",
+                                        "Value": 1,
+                                        "SpanID": "igiZh4DvyUg=",
+                                        "TraceID": "rsfcM5JrWjFvb3KGvTBruQ=="
+                                    }
+                                ]
+                            }
+                        ],
+                        "Temporality": "CumulativeTemporality",
+                        "IsMonotonic": true
+                    }
+                },
+                {
+                    "Name": "api.counter",
+                    "Description": "Number of API calls",
+                    "Unit": "{call}",
+                    "Data": {
+                        "DataPoints": [
+                            {
+                                "Attributes": [],
+                                "StartTime": "2025-02-07T15:48:20.658183244+07:00",
+                                "Time": "2025-02-07T15:48:59.658590752+07:00",
+                                "Value": 1,
+                                "Exemplars": [
+                                    {
+                                        "FilteredAttributes": null,
+                                        "Time": "2025-02-07T15:48:40.295962177+07:00",
+                                        "Value": 1,
+                                        "SpanID": "igiZh4DvyUg=",
+                                        "TraceID": "rsfcM5JrWjFvb3KGvTBruQ=="
+                                    }
+                                ]
+                            }
+                        ],
+                        "Temporality": "CumulativeTemporality",
+                        "IsMonotonic": true
+                    }
+                },
+                {
+                    "Name": "cpu.fan.speed",
+                    "Description": "Speed of CPU fan",
+                    "Unit": "RPM",
+                    "Data": {
+                        "DataPoints": [
+                            {
+                                "Attributes": [],
+                                "StartTime": "2025-02-07T15:48:20.658186123+07:00",
+                                "Time": "2025-02-07T15:48:59.658593599+07:00",
+                                "Value": 2427,
+                                "Exemplars": [
+                                    {
+                                        "FilteredAttributes": null,
+                                        "Time": "2025-02-07T15:48:46.298260879+07:00",
+                                        "Value": 2427,
+                                        "SpanID": "igiZh4DvyUg=",
+                                        "TraceID": "rsfcM5JrWjFvb3KGvTBruQ=="
+                                    },
+                                    {
+                                        "FilteredAttributes": null,
+                                        "Time": "2025-02-07T15:48:44.297861571+07:00",
+                                        "Value": 1730,
+                                        "SpanID": "igiZh4DvyUg=",
+                                        "TraceID": "rsfcM5JrWjFvb3KGvTBruQ=="
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
 }
