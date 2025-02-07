@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"math/rand"
 	"net"
 	"net/http"
@@ -14,16 +15,20 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/metric"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
 
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	sdkLog "go.opentelemetry.io/otel/sdk/log"
 	sdkMetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
@@ -36,6 +41,7 @@ var (
 	rollHistogram metric.Float64Histogram
 	apiCnt        metric.Int64Counter
 	cpuSpeedGauge metric.Int64Gauge
+	logger        *slog.Logger
 )
 
 const packageName = "learn-prometheus"
@@ -56,6 +62,7 @@ func main() {
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceName("exampleService"),
+			semconv.ServiceVersion("0.1.0"),
 		),
 	)
 	if err != nil {
@@ -124,6 +131,22 @@ func main() {
 		panic(err)
 	}
 
+	logProvider, err := newLoggerProvider(ctx, r)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		logProvider.Shutdown(ctx)
+	}()
+
+	// Register as global logger provider so that it can be accessed global.LoggerProvider.
+	// Most log bridges use the global logger provider as default.
+	// If the global logger provider is not set then a no-op implementation
+	// is used, which fails to generate data.
+	global.SetLoggerProvider(logProvider)
+
+	logger = otelslog.NewLogger(packageName, otelslog.WithLoggerProvider(logProvider))
+
 	// Start HTTP Server
 	srv := &http.Server{
 		Addr:         ":8090",
@@ -135,6 +158,18 @@ func main() {
 	srvErr := make(chan error, 1)
 	go func() {
 		srvErr <- srv.ListenAndServe()
+	}()
+
+	// Start another Server to export prometheus metrics.
+	// Otherwise, Jaeger will be spammed by Prometheus constantly scraping data by calling localhost:8090/metrics.
+	go func() {
+		log.Printf("serving metrics at localhost:8091/metrics")
+		http.Handle("/metrics", promhttp.Handler())
+		err := http.ListenAndServe(":8091", nil)
+		if err != nil {
+			fmt.Printf("error serving http: %v", err)
+			return
+		}
 	}()
 
 	go func() {
@@ -169,7 +204,6 @@ func newHTTPHandler() http.Handler {
 	// Register handlers.
 	handleFunc("/rolldice/", rolldice)
 	handleFunc("/rolldice/{playerID}", rolldice)
-	mux.Handle("/metrics", promhttp.Handler())
 
 	// Add HTTP instrumentation for the whole server.
 	handler := otelhttp.NewHandler(mux, "/")
@@ -182,6 +216,7 @@ func newHTTPHandler() http.Handler {
 // 2. Span parameter.
 // 3. Meter Counter instrumentation.
 // 4. Meter Histogram instrumentation.
+// 5. OTEL Logging.
 func rolldice(w http.ResponseWriter, r *http.Request) {
 	// 1.
 	ctx, span := tracer.Start(r.Context(), "first roll")
@@ -217,6 +252,8 @@ func rolldice(w http.ResponseWriter, r *http.Request) {
 	span.SetAttributes(rollValueAttr)
 	// 3.
 	rollCnt.Add(ctx, 1, metric.WithAttributes(rollValueAttr))
+	// 5.
+	logger.InfoContext(ctx, msg, "result", roll)
 
 	resp := fmt.Sprintf("Roll 1: %s\n", strconv.Itoa(roll))
 	if _, err := io.WriteString(w, resp); err != nil {
@@ -350,4 +387,26 @@ func newMeterProvider(res *resource.Resource) (*sdkMetric.MeterProvider, error) 
 	)
 
 	return meterProvider, nil
+}
+
+// This Logger Provider doesn't seem to work because it's trying to send to https://localhost:4318/v1/logs.
+// Wtf is that??? It doesn't seem to be related to Jaeger.
+//
+// It seems like it will require another Log ingestor, like Loki, which I'll look at later.
+func newLoggerProvider(ctx context.Context, res *resource.Resource) (*sdkLog.LoggerProvider, error) {
+	logExporter, err := otlploghttp.New(
+		ctx,
+		// Change from HTTPS -> HTTP.
+		otlploghttp.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	logProvider := sdkLog.NewLoggerProvider(
+		sdkLog.WithResource(res),
+		sdkLog.WithProcessor(sdkLog.NewBatchProcessor(logExporter)),
+	)
+
+	return logProvider, nil
 }
