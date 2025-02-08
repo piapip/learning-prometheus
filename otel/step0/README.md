@@ -25,7 +25,17 @@ Structure:
 ```
 
 NOTE:
-Don't even bother trying to install Loki the proper way, just docker it up.
+
+Source: I didn't follow word by word any documentation, it's a combination of:
+1. https://opentelemetry.io/docs/languages/go/instrumentation/ (Make some customized trace/metric/log provider following the 3 otel docs first.)
+2. https://opentelemetry.io/docs/languages/go/exporters/
+3. https://opentelemetry.io/docs/languages/go/resources/
+4. To ingest data with external source, dig the Internet for help.
+5. Ingest tracing with Jaeger: https://github.com/antonputra/tutorials/tree/main/lessons/178
+6. Ingest metrics with Prometheus: https://github.com/open-telemetry/opentelemetry-go-contrib/tree/main/examples
+7. Ingest Logs with Loki: https://grafana.com/docs/loki/latest/send-data/otel/otel-collector-getting-started/
+
+[6] Don't even bother trying to install Loki the proper way, just docker it up.
 
 Run this thing blindly following this documentation to export the logs to Loki in Grafana.
 https://grafana.com/docs/loki/latest/send-data/otel/otel-collector-getting-started/

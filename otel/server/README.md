@@ -15,3 +15,7 @@ Architecture:
 |                                   |                            the container.            │ Metric │────────────┘
 └───────────────────────────────────┘                                                      └────────┘
 ```
+
+NOTE:
+
+Source: https://opentelemetry.io/docs/languages/go/getting-started/
