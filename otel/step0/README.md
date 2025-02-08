@@ -53,7 +53,7 @@ It turns out that I can export the traces via another port, I selected 4319 for 
 Command I ran were:
 ```bash
 # Spin the Loki support in 1 terminal
-docker-compose -f ./loki/docker-compose.yaml up -d
+docker-compose -f ./otel/step0/loki/docker-compose.yaml up -d
 ```
 
 ```bash
@@ -65,7 +65,7 @@ docker run --rm --name jaeger -e COLLECTOR_OTLP_ENABLED=true -p 16686:16686 -p 4
 
 ```bash
 # Spin the application in another terminal
-./otel/withJaeger/run.sh
+./otel/step0/run.sh
 ```
 
 ![Jaeger and Loki working well together](./Screenshot%20from%202025-02-08%2001-57-56.png?raw=true)
