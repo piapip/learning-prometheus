@@ -1,0 +1,77 @@
+# QUESTION: Where can I find the schema of this forsaken thing?
+# Receivers
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+# Processors
+processors:
+  batch:
+    timeout: 1s
+  # # Resource here will alter the data being sent,
+  # # this one will add one more attribute, it's only useful for tracing,
+  # # so it'll be used only in service.pipeline.traces
+  # resource:
+  #   attributes:
+  #     - key: test.key
+  #       value: "test-value"
+  #       actions: insert
+
+# Exporters
+exporters:
+  prometheus:
+    # QUESTION: WTF is this 8889 port? 
+    # Maybe it's from the port exposed by otel-collector-gateway in docker-compose,
+    # but then, where the fuck is that 8889 value coming from?
+    endpoint: "0.0.0.0:8889"
+    # send_timestamps: true
+    # namespace: promexample
+    # const_labels:
+    #   label1: value1
+  otlp/jaeger:
+    # This is for jaeger btw, idk why jaeger is removed from the exporters...
+    # QUESTION: Why 14250?
+    # In https://www.jaegertracing.io/docs/next-release/getting-started/
+    # 14250 is for accepting models.proto.
+    # Everything I'm doing so far is via the HTTP...
+    # 
+    # Okay 14250 doesn't work. Why though? 
+    #   https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/32892
+    # How tf can I know about that?
+    # 
+    # Why 4317 works and not 4318?
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  otlphttp/logs:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1888
+  # zpages:
+  #   endpoint: :55679
+      
+# Pipelines
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/logs]
+    traces:
+      receivers: [otlp]
+      # processors: [batch, resource]
+      processors: [batch]
+      exporters: [otlp/jaeger]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
