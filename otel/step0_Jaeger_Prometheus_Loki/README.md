@@ -27,6 +27,16 @@ Architecture:
 
 NOTE:
 
+Traces and Metrics are pretty unreadable without visualizer, so adding this in this attempt. Following the Getting started section, this one requires even more magic sniffing. So many things are like, you just have to import this scroll that you can get after asking that hidden druid only wake up once in 3 blue moons for 2 seconds. ᓚᘏᗢ
+```
+       へ   ♡   ╱|、
+    ૮ - ՛)     (` -7
+    / ⁻ ៸|     |、⁻〵
+ 乀 (ˍ,ل ل     じしˍ,)ノ
+```
+
+But srsl, OTEL is kinda complicated bc it needs to work in the same way for all the languages, and complicated problem requires a big hammer.
+
 Source: I didn't follow word by word any documentation, it's a combination of:
 1. https://opentelemetry.io/docs/languages/go/instrumentation/ (Make some customized trace/metric/log provider following the 3 otel docs first.)
 2. https://opentelemetry.io/docs/languages/go/exporters/

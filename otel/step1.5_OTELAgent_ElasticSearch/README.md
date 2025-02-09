@@ -37,3 +37,9 @@ Source: https://www.youtube.com/watch?v=L_gjG4BjvSE&list=PLNxnp_rzlqf6z1cC0IkIwp
 - With ElasticSearch running now, even if I shutdown my docker, the next spin up will contain the previous data.
 - To check ElasticSearch data, go to this endpoint: `http://localhost:9200/_cat/indices?v` or `http://localhost:9200/_cat/indices/{index}?v` for example: `http://localhost:9200/_cat/indices/jaeger-service-2025-02-09?v`. It doesn't show concrete data, but close enough. Check this `http://localhost:9200/_cat` to see all the ElasticSearch available endpoints.
 - For a clearer ElasticSearch nonsense, you can checkout this endpoint `http://localhost:9200/{index}/_search` for example: `http://localhost:9200/jaeger-service-2025-02-09/_search`.
+
+```
+ ∧,,,∧
+(_•·•_)
+/ づ♡ I love you 100%!
+```
