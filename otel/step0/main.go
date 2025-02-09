@@ -334,6 +334,8 @@ func newConsoleExporter() (sdkTrace.SpanExporter, error) {
 
 // newJaegerExporter initializes and returns a Jaeger exporter.
 func newJaegerExporter(ctx context.Context) (sdkTrace.SpanExporter, error) {
+	// QUESTION: Is my explanation down here correct?
+	//
 	// Jaeger:
 	//   (Local) 4320 >> (Jaeger) 4317 for gRPC
 	//   (Local) 4319 >> (Jaeger) 4318 for HTTP API

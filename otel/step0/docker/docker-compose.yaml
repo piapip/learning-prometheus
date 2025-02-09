@@ -10,6 +10,7 @@ services:
       - "4317:4317" #grpc
       - "4318:4318" #http
     depends_on:
+      - jaeger
       - loki
     networks:
       - loki
@@ -22,6 +23,14 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - loki
-    
+  jaeger:
+    image: jaegertracing/jaeger:2.2.0
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - 16686:16686 # For the UI
+      - 4320:4317   # QUESTION: For ???
+      - 4319:4318   # QUESTION: For ???
+
 networks:
     loki:
