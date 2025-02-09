@@ -1,0 +1,47 @@
+# Receivers
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+# Processors
+processors:
+  batch:
+    timeout: 1s
+
+# Exporters
+# All what agent does is forwarding the data from the application to the gateway,
+# so what's its purpose again? Can I skip this PoS entirely?
+exporters:
+  otlp/gateway:
+    # QUESTION: Hmm, so the stuff sent to the agent is via the HTTP endpoint,
+    # but forwarding from agent to gateway must be gRPC. MonkaMega.
+    # Nicely written docs, so what's the big idea behind this decision?
+    endpoint: "otel-collector-gateway:4320"
+    tls:
+      insecure: true
+  debug:
+    verbosity: basic
+
+extensions:
+  health_check:
+      
+# Pipelines
+service:
+  extensions: [health_check]
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp/gateway]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp/gateway]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, otlp/gateway]

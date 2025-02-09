@@ -1,0 +1,85 @@
+version: '3'
+services:
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elastic
+  otel-collector-gateway:
+    image: otel/opentelemetry-collector:latest
+    volumes:
+      - ./otel-config-gateway.yaml:/etc/otel/config-gateway.yaml
+    command:
+      - '--config=/etc/otel/config-gateway.yaml'
+    ports:
+      - "1888:1888"   # pprof extension
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4320:4320"   # OTEL grpc receiver
+      - "4319:4319"   # OTEL http receiver
+      - "55670:55679" # zpages extension
+    depends_on:
+      - jaeger
+      - loki
+    networks:
+      - loki
+      - jaeger
+      - otel-collector-gateway
+  loki:
+    image: grafana/loki:main
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - loki
+  jaeger:
+    # This image was fine until I need ElasticSearch.
+    # To have ElasticSearch working, I'll need to setup collector and agent for Jaeger,
+    # like how to have Loki working, I need both otel agent and gateway.
+    # image: jaegertracing/jaeger:2.2.0
+    image: jaegertracing/all-in-one
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elastic:9200
+    ports: 
+    - 5775:5775
+    - 6831:6831
+    - 6832:6832
+    - 5778:5778
+    - 16686:16686 # For the UI.
+    - 14268:14268
+    - 14250:14250
+    - 9411:9411
+    # To simplify the demo, normally,
+    # we'll always have the ElasticSearch deployed before this to even start.
+    restart: on-failure
+    depends_on:
+      - elastic
+    networks:
+      - jaeger
+      - elastic
+  otel-collector-agent:
+    image: otel/opentelemetry-collector:latest
+    volumes:
+      - ./otel-config-agent.yaml:/etc/otel/config-agent.yaml
+    command:
+      - '--config=/etc/otel/config-agent.yaml'
+    ports:
+      - "4318:4318"   # OTEL http receiver
+    depends_on:
+      - otel-collector-gateway
+    networks:
+      - otel-collector-gateway
+networks:
+    loki:
+    jaeger:
+    otel-collector-gateway:
+    elastic:
