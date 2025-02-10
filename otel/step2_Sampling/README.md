@@ -28,7 +28,9 @@ Architecture:
 
 NOTE:
 
-- Source: https://www.youtube.com/watch?v=tb6VHrihPZI&list=PLNxnp_rzlqf6z1cC0IkIwp6yjsBboX945&index=5&ab_channel=Aspecto
+- Source:
+  - https://www.youtube.com/watch?v=tb6VHrihPZI&list=PLNxnp_rzlqf6z1cC0IkIwp6yjsBboX945&index=5&ab_channel=Aspecto
+  - tail_sampling structure in the otel-config-gateway's processor: https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/1f8c1eedf219e445f02a1504e72bb557a3f22cff/processor/tailsamplingprocessor
 - Here's the endpoint to make some random status 500 error: http://localhost:8090/rolldice/Alice?q=sadf&fail=we 
 - Here's the endpoint for premium users: http://localhost:8090/rolldice/Alice/premium
 - The docker image for the Gateway must be "otel/opentelemetry-collector-contrib" to support tail sampling.
