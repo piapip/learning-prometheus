@@ -28,7 +28,7 @@ func (s *Server) HandleWS(ws *websocket.Conn) {
 	s.conns[ws] = true
 	fmt.Println("Active connection: ", len(s.conns))
 
-	buf := make([]byte, 1024000)
+	buf := make([]byte, 1024)
 
 	// After the connection is established, the server will wait for the client's message via the socket.
 	// The server will reply with "Thank you for the message!!!" upon receiving a message.
