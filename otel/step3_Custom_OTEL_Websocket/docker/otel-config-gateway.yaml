@@ -1,0 +1,97 @@
+# Receivers
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4320
+      http:
+        endpoint: 0.0.0.0:4319
+
+# Processors
+processors:
+  batch:
+    timeout: 1s
+  tail_sampling:
+    # What's the purpose of this? When the span close, export it, then wait for what? In case of hanging?
+    decision_wait: 10s
+    num_traces: 100
+    # This is just dev estimating and produce a number themselves for the better memory allocation.
+    # The closer the better.
+    # It's better to overshoot than undershoot because it's cheaper to allocate more memory than to reallocate more memory.
+    # Common sense required. If you set this to 20_000 then it will be pretty expensive memory wise.
+    expected_new_traces_per_sec: 20
+    # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/tailsamplingprocessor
+    policies:
+      [
+        # These are OR policies.
+        {
+          name: test-policy-1,
+          type: status_code,
+          # This is the span status code btw.
+          status_code: {status_codes: [ERROR]}
+        },
+        # can't test it conveniently, so comment it out.
+        # {
+        #   name: test-policy-2,
+        #   type: latency,
+        #   # threshold_ms = min, upper_threshold_ms = max
+        #   # If max = 0: latency >= min.
+        #   # If max != 0: max > latency >= min.
+        #   # https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1f8c1eedf219e445f02a1504e72bb557a3f22cff/processor/tailsamplingprocessor/internal/sampling/latency.go#L55
+        #   latency: {threshold_ms: 5000, upper_threshold_ms: 10000}
+        # },
+        {
+          name: only-premium-peeps,
+          type: string_attribute,
+          string_attribute: {key: tier, values: [premium, admin]}
+        },
+      ]
+
+# Exporters
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    send_timestamps: true
+    # This namespace will make some stupid changes
+    # to the metric name so don't even bother.
+    # namespace: promexample
+    # QUESTION
+    # This const labels will add some useless label data as well.
+    # We can do this in the code, why here?
+    # const_labels:
+    #   label1: value1
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+  otlphttp/logs:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+  # There's no debug option in opentelemetry-collector-contrib so have to fmt.Printf instead
+  # debug:
+  #   verbosity: detailed
+
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1888
+  # zpages:
+  #   endpoint: :55679
+      
+# Pipelines
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/logs]
+    traces:
+      receivers: [otlp]
+      # processors: [tail_sampling, batch]
+      processors: [batch]
+      exporters: [otlp/jaeger]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
