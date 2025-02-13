@@ -20,3 +20,14 @@ Depending on the image being used in the docker-compose, I'd go to the respectiv
 - Explanation in code in case English can't explain well enough. For example: [how processors.tail_sampling.policies.latency works](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/1f8c1eedf219e445f02a1504e72bb557a3f22cff/processor/tailsamplingprocessor/internal/sampling/latency.go#L55)
 
 It seems like there's no way to demystify OTEL. I can follow https://github.com/open-telemetry/opentelemetry-go/tree/main/sdk to understand the purpose of the OTEL function. But if you ask me how I know that I need to use that specific function and not the others, I don't know, either found it from some blog or the tutorial. At least that's how it goes so far.
+
+Some random sauce:
+- https://prometheus.io/docs/prometheus/latest/getting_started/
+- https://www.jaegertracing.io/docs/next-release/getting-started/
+- https://github.com/antonputra/tutorials/blob/main/lessons/178/myapp/main.go
+- https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter
+- https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/examples/otel-collector/main.go
+- https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/debugexporter/README.md
+- https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor
+
+and a lot more in the ./otel folder
