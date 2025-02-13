@@ -40,3 +40,12 @@ NOTE:
 - There's no documentation of how to inject/extract/connecting. This is done by a lot of copying, trials, and errors.
 
 ![Traces are propagated and connected](./Screenshot%20from%202025-02-13.png?raw=true)
+
+```
+        ♡ ∩_∩ 
+        („•֊•„)♡
+|￣￣￣￣￣ U U ￣￣￣￣|
+|     It's over!     |
+|                    |
+￣￣￣￣￣￣￣￣￣￣￣￣￣
+```
