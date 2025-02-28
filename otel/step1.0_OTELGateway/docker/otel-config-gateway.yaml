@@ -1,4 +1,8 @@
-# QUESTION: Where can I find the schema of this forsaken thing?
+# QUESTION[Answered]: Where can I find the schema of this forsaken thing?
+# In the github page, depends on the docker image that you use.
+# For example:
+# - If the image is `otel/opentelemetry-collector-contrib`, then https://github.com/open-telemetry/opentelemetry-collector-contrib.
+# - If the image is `otel/opentelemetry-collector`, then https://github.com/open-telemetry/opentelemetry-collector.
 # Receivers
 receivers:
   otlp:
